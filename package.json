@@ -1,7 +1,9 @@
 {
   "name": "xjbASTObfuscations",
   "version": "1.0.0",
-  "main": "index.js",
+  "scripts": {
+    "obfuscations": "node main.js"
+  },
   "repository": "git@github.com:AST-Disambiguation/xjbASTObfuscations.git",
   "author": "paynewu <wuzhipeng1289690157@gmail.com>",
   "license": "MIT",
