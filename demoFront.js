@@ -1,8 +1,8 @@
 (function (myArr, num) {
-    var xiaojianbang = function (nums) {
+    let resetArr = function (nums) {
         while (--nums) {
             myArr.push(myArr.shift());
         }
     };
-    xiaojianbang(++num);
+    resetArr(++num);
 }(arr, 0x10));
