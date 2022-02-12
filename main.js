@@ -66,7 +66,6 @@ ConfoundUtils.prototype.numericEncrypt = function () {
     })
 };
 
-
 /**
  * 逗号表达式
  */
@@ -208,7 +207,8 @@ ConfoundUtils.prototype.stringToHex = function () {
             path.node.computed = true;
         }
     });
-}
+};
+
 /**
  * 标识符混淆
  */
@@ -355,7 +355,8 @@ ConfoundUtils.prototype.unshiftArrayDeclaration = function () {
     this.bigArr = t.variableDeclarator(t.identifier('arr'), t.arrayExpression(this.bigArr));
     this.bigArr = t.variableDeclaration('var', [this.bigArr]);
     this.ast.program.body.unshift(this.bigArr);
-}
+};
+
 //拼接两个ast的body部分
 ConfoundUtils.prototype.astConcatUnshift = function (ast) {
     this.ast.program.body.unshift(ast);
@@ -363,7 +364,6 @@ ConfoundUtils.prototype.astConcatUnshift = function (ast) {
 ConfoundUtils.prototype.getAst = function () {
     return this.ast;
 }
-
 
 function main() {
     //读取要混淆的代码
