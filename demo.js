@@ -1,5 +1,4 @@
 window = global;
-delete global;
 Date.prototype.format = function (formatStr) {
     var str = formatStr;
     str = str.replace(/yyyy|YYYY/, this.getFullYear());

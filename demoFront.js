@@ -1,8 +1,8 @@
 (function (myArr, num) {
-    let resetArr = function (nums) {
+    var reductionArr = function (nums) {
         while (--nums) {
             myArr.push(myArr.shift());
         }
     };
-    resetArr(++num);
+    reductionArr(++num);
 }(arr, 0x10));
