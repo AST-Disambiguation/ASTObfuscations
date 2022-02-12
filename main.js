@@ -9,7 +9,7 @@ function ConfoundUtils(ast, encryptFunc) {
     this.ast = ast;
     this.bigArr = [];
     this.encryptFunc = encryptFunc;
-}
+};
 
 /**
  * 修改对象属性访问方式
@@ -301,7 +301,7 @@ ConfoundUtils.prototype.commaConfusion = function () {
         }
     });
 
-}
+};
 
 /**
  * 控制平坦流
