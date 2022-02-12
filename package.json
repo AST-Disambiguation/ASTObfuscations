@@ -1,7 +1,9 @@
 {
-  "name": "example",
+  "name": "xjbASTObfuscations",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "index.js",
+  "repository": "git@github.com:AST-Disambiguation/xjbASTObfuscations.git",
+  "author": "paynewu <wuzhipeng1289690157@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@babel/generator": "^7.17.0",
