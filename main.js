@@ -36,7 +36,10 @@ ConfoundUtils.prototype.changeBuiltinObjects = function () {
         Identifier(path) {
             let name = path.node.name;
             if (native_func.indexOf(name) !== -1) {
-                path.replaceWith(t.memberExpression(t.identifier('window'), t.stringLiteral(name), true));
+                path.replaceWith(
+                    t.memberExpression(t.identifier('window'),
+                        t.stringLiteral(name), true)
+                );
             }
         }
     });
@@ -54,7 +57,12 @@ ConfoundUtils.prototype.numericEncrypt = function () {
             let value = path.node.value;
             let key = parseInt(randoms(2, Math.pow(2, 64)), Math.pow(2, 16));
             let cipherNum = value ^ key;
-            path.replaceWith(t.binaryExpression('^', t.numericLiteral(cipherNum), t.numericLiteral(key)));
+            path.replaceWith(
+                t.binaryExpression(
+                    '^',
+                    t.numericLiteral(cipherNum),
+                    t.numericLiteral(key))
+            );
             path.skip();
         }
     });
@@ -76,7 +84,13 @@ ConfoundUtils.prototype.arrayConfound = function () {
             }
             let encStr = t.callExpression(
                 t.identifier('atob'),
-                [t.memberExpression(t.identifier('arr'), t.numericLiteral(index), true)]);
+                [
+                    t.memberExpression(
+                        t.identifier('arr'),
+                        t.numericLiteral(index),
+                        true
+                    )
+                ]);
             path.replaceWith(encStr);
         }
     });
