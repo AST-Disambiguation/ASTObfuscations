@@ -5,7 +5,7 @@
     "obfuscations": "node main.js"
   },
   "repository": "git@github.com:AST-Disambiguation/xjbASTObfuscations.git",
-  "author": "paynewu <wuzhipeng1289690157@gmail.com>",
+  "author": "paynewu(0x2cf)",
   "license": "MIT",
   "devDependencies": {
     "@babel/generator": "^7.17.0",
