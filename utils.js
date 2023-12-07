@@ -3,9 +3,9 @@
  * @param {number} m
  * @param {number} n
  */
-exports.randoms = (m, n) => {
-  return Math.floor(Math.random() * (m - n) + n)
-};
+exports.randoms = (min, max) => {
+  return Math.floor(Math.random() * (max - min)) + min
+}
 
 /**
  * base64Encode

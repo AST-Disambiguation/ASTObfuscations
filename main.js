@@ -54,11 +54,12 @@ ConfoundUtils.prototype.numericEncrypt = function () {
   traverse(this.ast, {
     NumericLiteral(path) {
       let value = path.node.value;
-      let key = parseInt(randoms(2, Math.pow(2, 64)), Math.pow(2, 16));
-      let cipherNum = value ^ key;
-      path.replaceWith(t.binaryExpression('^', t.numericLiteral(cipherNum),
+      let key = parseInt(randoms(1, 1 << 8));
+      let cipherNum = value | key;
+      console.log(value, key, cipherNum)
+      path.replaceWith(t.binaryExpression('|', t.numericLiteral(cipherNum),
           t.numericLiteral(key)));
-      path.skip();
+      path.skip()
     }
   });
 };
