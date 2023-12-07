@@ -55,9 +55,8 @@ ConfoundUtils.prototype.numericEncrypt = function () {
     NumericLiteral(path) {
       let value = path.node.value;
       let key = parseInt(randoms(1, 1 << 8));
-      let cipherNum = value | key;
-      console.log(value, key, cipherNum)
-      path.replaceWith(t.binaryExpression('|', t.numericLiteral(cipherNum),
+      let cipherNum = value ^ key;
+      path.replaceWith(t.binaryExpression('^', t.numericLiteral(cipherNum),
           t.numericLiteral(key)));
       path.skip()
     }
