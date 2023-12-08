@@ -33,13 +33,13 @@ jobs:
         node-version: [ 14.x, 16.x, 18.x, 20.x ]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
         os: [
+          windows-latest,
+          macos-latest,
+          ubuntu-latest
           #          ubuntu-18.04,
           #          ubuntu-20.04,
-          ubuntu-latest,
           #          macos-10.15,
           #          macos-11,
-          macos-latest,
-          windows-latest
         ]
     steps:
       - uses: actions/checkout@v3
@@ -47,7 +47,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm i -g yarn
-      - run: yarn --frozen-lockfile
+      - run: |
+          npm i -g yarn
+          yarn --frozen-lockfile
       - run: npm run build --if-present
       - run: npm run obfuscations
