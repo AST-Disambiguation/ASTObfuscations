@@ -49,15 +49,26 @@ ConfoundUtils.prototype.changeBuiltinObjects = function () {
  * * 相反的: +,-,*,/,<<,>>
  * * 相同的: ^
  * * * `\`, `&`,
+ * todo: 保护强度需要增强
  */
 ConfoundUtils.prototype.numericEncrypt = function () {
+  // 定义符号映射关系
+  const symbolDict = {
+    "+": "-", "-": "+", "^": "^", "*": "/", "/": "*"
+  }
+  const keys = Object.keys(symbolDict);
+
   traverse(this.ast, {
     NumericLiteral(path) {
-      let value = path.node.value;
-      let key = parseInt(randoms(1, 1 << 8));
-      let cipherNum = value ^ key;
-      path.replaceWith(t.binaryExpression('^', t.numericLiteral(cipherNum),
-          t.numericLiteral(key)));
+      const value = path.node.value, key = parseInt(randoms(0, 1 << 8));
+      const symbolKey = keys[Math.floor(Math.random() * keys.length)],
+          symbolVal = symbolDict[symbolKey]
+
+      const cipherString = `${value}` + `${symbolKey}` + `${key}`
+      const cipherNum = eval(cipherString);
+      path.replaceWith(
+          t.binaryExpression(symbolVal, t.numericLiteral(cipherNum),
+              t.numericLiteral(key)));
       path.skip()
     }
   });
@@ -65,6 +76,7 @@ ConfoundUtils.prototype.numericEncrypt = function () {
 
 /**
  * 字符串混淆与数组抽离
+ * todo: 自定义编解码算法
  */
 ConfoundUtils.prototype.arrayConfound = function () {
   let bigArr = [];
@@ -211,7 +223,7 @@ ConfoundUtils.prototype.appointedCodeLineEncrypt = function () {
           return v;
         }
         if (!(v.trailingComments && v.trailingComments[0].value
-            == 'Base64Encrypt')) {
+            === 'Base64Encrypt')) {
           return v;
         }
         delete v.trailingComments;
@@ -239,7 +251,7 @@ ConfoundUtils.prototype.appointedCodeLineAscii = function () {
           return v;
         }
         if (!(v.trailingComments && v.trailingComments[0].value
-            == 'ASCIIEncrypt')) {
+            === 'ASCIIEncrypt')) {
           return v;
         }
         delete v.trailingComments;
@@ -390,76 +402,74 @@ ConfoundUtils.prototype.getAst = function () {
   return this.ast;
 };
 
-function main() {
-  //读取要混淆的代码
-  const jscode = fs.readFileSync("./demo.js", {
-    encoding: "utf-8"
-  });
+//读取要混淆的代码
+const jscode = fs.readFileSync("./demo.js", {
+  encoding: "utf-8"
+});
 
-  //读取还原数组乱序的代码
-  const jscodeFront = fs.readFileSync("./demoFront.js", {
-    encoding: "utf-8"
-  });
+//把要混淆的代码解析成ast
+let ast = parse(jscode);
 
-  //把要混淆的代码解析成ast
-  let ast = parse(jscode);
+//把还原数组乱序的代码解析成astFront
+let astFront = parse(
+    "(function(myArr,num){var reductionArr=function(nums){while(--nums){myArr.push(myArr.shift());}};reductionArr(++num);})(arr,0x10);");
 
-  //把还原数组乱序的代码解析成astFront
-  let astFront = parse(jscodeFront);
+//初始化类，传递自定义的加密函数进去
+let confoundAst = new ConfoundUtils(ast, base64Encode);
+let confoundAstFront = new ConfoundUtils(astFront);
 
-  //初始化类，传递自定义的加密函数进去
-  let confoundAst = new ConfoundUtils(ast, base64Encode);
-  let confoundAstFront = new ConfoundUtils(astFront);
+//改变对象属性访问方式
+confoundAst.changeAccessMode();
 
-  //改变对象属性访问方式
-  confoundAst.changeAccessMode();
+//标准内置对象的处理
+confoundAst.changeBuiltinObjects();
 
-  //标准内置对象的处理
-  confoundAst.changeBuiltinObjects();
+// 逗号表达式
+confoundAst.commaConfusion();
 
-  // 逗号表达式
-  confoundAst.commaConfusion();
+//二项式转函数花指令
+confoundAst.binaryToFunc()
 
-  //二项式转函数花指令
-  confoundAst.binaryToFunc()
+//字符串加密与数组混淆
+confoundAst.arrayConfound();
 
-  //字符串加密与数组混淆
-  confoundAst.arrayConfound();
+//数组乱序
+confoundAst.arrayShuffle();
 
-  //数组乱序
-  confoundAst.arrayShuffle();
+//还原数组顺序代码，改变对象属性访问方式，对其中的字符串进行十六进制编码
+confoundAstFront.stringToHex();
+astFront = confoundAstFront.getAst();
 
-  //还原数组顺序代码，改变对象属性访问方式，对其中的字符串进行十六进制编码
-  confoundAstFront.stringToHex();
-  astFront = confoundAstFront.getAst();
+//先把还原数组顺序的代码，加入到被混淆代码的ast中
+confoundAst.astConcatUnshift(astFront.program.body[0]);
 
-  //先把还原数组顺序的代码，加入到被混淆代码的ast中
-  confoundAst.astConcatUnshift(astFront.program.body[0]);
+//再生成数组声明语句，并加入到被混淆代码的最开始处
+confoundAst.unshiftArrayDeclaration();
 
-  //再生成数组声明语句，并加入到被混淆代码的最开始处
-  confoundAst.unshiftArrayDeclaration();
+//标识符重命名
+confoundAst.renameIdentifier();
 
-  //标识符重命名
-  confoundAst.renameIdentifier();
+//指定代码行的混淆，需要放到标识符混淆之后
+confoundAst.appointedCodeLineEncrypt();
+confoundAst.appointedCodeLineAscii();
 
-  //指定代码行的混淆，需要放到标识符混淆之后
-  confoundAst.appointedCodeLineEncrypt();
-  confoundAst.appointedCodeLineAscii();
+//数值常量混淆
+confoundAst.numericEncrypt();
 
-  //数值常量混淆
-  confoundAst.numericEncrypt();
+// 平坦流
+confoundAst.flatFlow();
+ast = confoundAst.getAst();
 
-  // 平坦流
-  confoundAst.flatFlow();
-  ast = confoundAst.getAst();
+//ast转为代码
+let {code} = generator(ast, {
+  minified: true,
+  comments: false,
+  retainLines: false,
+  compact: true,
+  jsescOption: {}
+});
 
-  //ast转为代码
-  let {code} = generator(ast);
-
-  //混淆的代码中，如果有十六进制字符串加密，ast转成代码以后会有多余的转义字符，需要替换掉
-  code = code.replace(/\\\\x/g, '\\x');
-  fs.writeFileSync('ss_target.js', code, err => {
-  })
-}
-
-main();
+//混淆的代码中，如果有十六进制字符串加密，ast转成代码以后会有多余的转义字符，需要替换掉
+code = code.replace(/\\\\x/g, '\\x');
+fs.writeFileSync('ss_target.js', code, err => {
+})
