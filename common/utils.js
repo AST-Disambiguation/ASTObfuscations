@@ -13,23 +13,23 @@ exports.randoms = (min, max) => {
  */
 exports.base64Encode = function (e) {
   var r, a, c, h, o, t,
-      base64EncodeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    base64EncodeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   for (c = e.length, a = 0, r = ''; a < c;) {
     if (h = 255 & e.charCodeAt(a++), a == c) {
       r += base64EncodeChars.charAt(h >> 2), r += base64EncodeChars.charAt(
-          (3 & h) << 4), r += '==';
+        (3 & h) << 4), r += '==';
       break
     }
     if (o = e.charCodeAt(a++), a == c) {
       r += base64EncodeChars.charAt(h >> 2), r += base64EncodeChars.charAt(
-          (3 & h) << 4 | (240 & o) >> 4), r += base64EncodeChars.charAt(
+        (3 & h) << 4 | (240 & o) >> 4), r += base64EncodeChars.charAt(
           (15 & o) << 2), r += '=';
       break
     }
     t = e.charCodeAt(a++), r += base64EncodeChars.charAt(
-        h >> 2), r += base64EncodeChars.charAt(
+      h >> 2), r += base64EncodeChars.charAt(
         (3 & h) << 4 | (240 & o) >> 4), r += base64EncodeChars.charAt(
-        (15 & o) << 2 | (192 & t) >> 6), r += base64EncodeChars.charAt(63 & t)
+          (15 & o) << 2 | (192 & t) >> 6), r += base64EncodeChars.charAt(63 & t)
   }
   return r
 };

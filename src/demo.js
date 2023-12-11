@@ -1,4 +1,4 @@
-window = global;
+window = global
 delete global;
 Date.prototype.format = function (formatStr) {
     var str = formatStr;

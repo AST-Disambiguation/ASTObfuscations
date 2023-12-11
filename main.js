@@ -3,7 +3,7 @@ const {parse} = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
 const generator = require("@babel/generator").default;
-const {randoms, base64Encode, native_func} = require('./utils');
+const {randoms, base64Encode, native_func} = require('./common/utils');
 
 function ConfoundUtils(ast, encryptFunc) {
   this.ast = ast;
@@ -250,10 +250,12 @@ ConfoundUtils.prototype.appointedCodeLineAscii = function () {
         if (t.isReturnStatement(v)) {
           return v;
         }
+
         if (!(v.trailingComments && v.trailingComments[0].value
             === 'ASCIIEncrypt')) {
           return v;
         }
+
         delete v.trailingComments;
         let {code} = generator(v);
         let codeAscii = [].map.call(code, function (v) {
@@ -403,9 +405,7 @@ ConfoundUtils.prototype.getAst = function () {
 };
 
 //读取要混淆的代码
-const jscode = fs.readFileSync("./demo.js", {
-  encoding: "utf-8"
-});
+const jscode = fs.readFileSync("src/demo.js", encoding = "utf-8");
 
 //把要混淆的代码解析成ast
 let ast = parse(jscode);
@@ -438,6 +438,7 @@ confoundAst.arrayShuffle();
 
 //还原数组顺序代码，改变对象属性访问方式，对其中的字符串进行十六进制编码
 confoundAstFront.stringToHex();
+
 astFront = confoundAstFront.getAst();
 
 //先把还原数组顺序的代码，加入到被混淆代码的ast中
@@ -471,5 +472,4 @@ let {code} = generator(ast, {
 
 //混淆的代码中，如果有十六进制字符串加密，ast转成代码以后会有多余的转义字符，需要替换掉
 code = code.replace(/\\\\x/g, '\\x');
-fs.writeFileSync('ss_target.js', code, err => {
-})
+fs.writeFileSync("lib/" + "res" + '.min.js', code)
