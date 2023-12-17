@@ -224,8 +224,7 @@ ConfoundUtils.prototype.appointedCodeLineEncrypt = function () {
         if (t.isReturnStatement(v)) {
           return v;
         }
-        if (!(v.trailingComments && v.trailingComments[0].value
-          === 'Base64Encrypt')) {
+        if (!(v.trailingComments && v.trailingComments[0].value.indexOf('Base64Encrypt') > -1)) {
           return v;
         }
         delete v.trailingComments;
@@ -255,8 +254,7 @@ ConfoundUtils.prototype.appointedCodeLineAscii = function () {
           return v;
         }
 
-        if (!(v.trailingComments && v.trailingComments[0].value
-          === 'ASCIIEncrypt')) {
+        if (!(v.trailingComments && v.trailingComments[0].value.indexOf('ASCIIEncrypt') > -1)) {
           return v;
         }
 
@@ -415,8 +413,7 @@ const jscode = fs.readFileSync("src/demo.js", encoding = "utf-8");
 let ast = parse(jscode);
 
 //把还原数组乱序的代码解析成astFront
-let astFront = parse(
-  "(function(myArr,num){var reductionArr=function(nums){while(--nums){myArr.push(myArr.shift());}};reductionArr(++num);})(arr,0x10);");
+let astFront = parse("(function(myArr,num){var reductionArr=function(nums){while(--nums){myArr.push(myArr.shift());}};reductionArr(++num);})(arr,0x10);");
 
 //初始化类，传递自定义的加密函数进去
 let confoundAst = new ConfoundUtils(ast, base64Encode);
@@ -424,52 +421,33 @@ let confoundAstFront = new ConfoundUtils(astFront);
 
 //改变对象属性访问方式
 confoundAst.changeAccessMode();
-
 //标准内置对象的处理
-// confoundAst.changeBuiltinObjects();
-
-// 逗号表达式
-confoundAst.commaConfusion();
-
+confoundAst.changeBuiltinObjects();
+//二项式转函数花指令
+confoundAst.binaryToFunc()
 //字符串加密与数组混淆
 confoundAst.arrayConfound();
-
 //数组乱序
 confoundAst.arrayShuffle();
 
 //还原数组顺序代码，改变对象属性访问方式，对其中的字符串进行十六进制编码
 confoundAstFront.stringToHex();
-
 astFront = confoundAstFront.getAst();
-
 //先把还原数组顺序的代码，加入到被混淆代码的ast中
 confoundAst.astConcatUnshift(astFront.program.body[0]);
 
 //再生成数组声明语句，并加入到被混淆代码的最开始处
 confoundAst.unshiftArrayDeclaration();
-
-// 二项式转函数花指令
-confoundAst.binaryToFunc()
-
-
-// 平坦流
-confoundAst.flatFlow();
-
-
 //标识符重命名
 confoundAst.renameIdentifier();
-
 //指定代码行的混淆，需要放到标识符混淆之后
 confoundAst.appointedCodeLineEncrypt();
-
-
+confoundAst.appointedCodeLineAscii();
 //数值常量混淆
 confoundAst.numericEncrypt();
 
-// ASCII编码
-// confoundAst.appointedCodeLineAscii();
+confoundAst.flatFlow();
 
-// 获取最终的AST
 ast = confoundAst.getAst();
 
 //ast转为代码
