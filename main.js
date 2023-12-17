@@ -1,9 +1,9 @@
 const fs = require('fs');
-const {parse} = require("@babel/parser");
+const { parse } = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 const t = require("@babel/types");
 const generator = require("@babel/generator").default;
-const {randoms, base64Encode, native_func} = require('./common/utils');
+const { randoms, base64Encode, native_func } = require('./common/utils');
 
 function ConfoundUtils(ast, encryptFunc) {
   this.ast = ast;
@@ -37,8 +37,8 @@ ConfoundUtils.prototype.changeBuiltinObjects = function () {
       let name = path.node.name;
       if (native_func.indexOf(name) !== -1) {
         path.replaceWith(
-            t.memberExpression(t.identifier('window'), t.stringLiteral(name),
-                true));
+          t.memberExpression(t.identifier('window'), t.stringLiteral(name),
+            true));
       }
     }
   });
@@ -62,13 +62,13 @@ ConfoundUtils.prototype.numericEncrypt = function () {
     NumericLiteral(path) {
       const value = path.node.value, key = parseInt(randoms(0, 1 << 8));
       const symbolKey = keys[Math.floor(Math.random() * keys.length)],
-          symbolVal = symbolDict[symbolKey]
+        symbolVal = symbolDict[symbolKey]
 
       const cipherString = `${value}` + `${symbolKey}` + `${key}`
       const cipherNum = eval(cipherString);
       path.replaceWith(
-          t.binaryExpression(symbolVal, t.numericLiteral(cipherNum),
-              t.numericLiteral(key)));
+        t.binaryExpression(symbolVal, t.numericLiteral(cipherNum),
+          t.numericLiteral(key)));
       path.skip()
     }
   });
@@ -90,8 +90,8 @@ ConfoundUtils.prototype.arrayConfound = function () {
         index = length - 1;
       }
       let encStr = t.callExpression(t.identifier('atob'),
-          [t.memberExpression(t.identifier('arr'), t.numericLiteral(index),
-              true)]);
+        [t.memberExpression(t.identifier('arr'), t.numericLiteral(index),
+          true)]);
       path.replaceWith(encStr);
     }
   });
@@ -129,8 +129,8 @@ ConfoundUtils.prototype.binaryToFunc = function () {
       let b = t.identifier('b');
       let funcNameIdentifier = path.scope.generateUidIdentifier('xxx');
       let func = t.functionDeclaration(funcNameIdentifier, [a, b],
-          t.blockStatement(
-              [t.returnStatement(t.binaryExpression(operator, a, b))]));
+        t.blockStatement(
+          [t.returnStatement(t.binaryExpression(operator, a, b))]));
       let BlockStatement = path.findParent(function (p) {
         return p.isBlockStatement()
       });
@@ -168,7 +168,7 @@ ConfoundUtils.prototype.stringToHex = function () {
  */
 ConfoundUtils.prototype.renameIdentifier = function () {
   //标识符混淆之前先转成代码再解析，才能确保新生成的一些节点也被解析到
-  let {code} = generator(this.ast);
+  let { code } = generator(this.ast);
   let newAst = parse(code);
 
   //生成标识符
@@ -183,7 +183,7 @@ ConfoundUtils.prototype.renameIdentifier = function () {
       return arr[v]
     }).join('');
     Identifier.length < 6 ? (Identifier = ('OOOOOO' + Identifier).substr(-6))
-        : Identifier[0] == '0' && (Identifier = 'O' + Identifier);
+      : Identifier[0] == '0' && (Identifier = 'O' + Identifier);
     return Identifier;
   }
 
@@ -194,7 +194,7 @@ ConfoundUtils.prototype.renameIdentifier = function () {
         let name = p.node.name;
         let binding = p.scope.getOwnBinding(name);
         binding && generator(binding.scope.block).code == path + ''
-            ? (OwnBindingObj[name] = binding) : (globalBindingObj[name] = 1);
+          ? (OwnBindingObj[name] = binding) : (globalBindingObj[name] = 1);
       }
     });
     for (let oldName in OwnBindingObj) {
@@ -213,7 +213,9 @@ ConfoundUtils.prototype.renameIdentifier = function () {
   this.ast = newAst;
 };
 
-//指定代码行加密
+/**
+ * 指定代码行加密
+ */
 ConfoundUtils.prototype.appointedCodeLineEncrypt = function () {
   traverse(this.ast, {
     FunctionExpression(path) {
@@ -223,16 +225,16 @@ ConfoundUtils.prototype.appointedCodeLineEncrypt = function () {
           return v;
         }
         if (!(v.trailingComments && v.trailingComments[0].value
-            === 'Base64Encrypt')) {
+          === 'Base64Encrypt')) {
           return v;
         }
         delete v.trailingComments;
-        let {code} = generator(v);
+        let { code } = generator(v);
         let cipherText = base64Encode(code);
         let decryptFunc = t.callExpression(t.identifier('atob'),
-            [t.stringLiteral(cipherText)]);
+          [t.stringLiteral(cipherText)]);
         return t.expressionStatement(
-            t.callExpression(t.identifier('eval'), [decryptFunc]));
+          t.callExpression(t.identifier('eval'), [decryptFunc]));
       });
       path.get('body').replaceWith(t.blockStatement(Statements));
     }
@@ -241,6 +243,8 @@ ConfoundUtils.prototype.appointedCodeLineEncrypt = function () {
 
 /**
  * 指定代码行ASCII码混淆
+ * 
+ * todo: 加强
  */
 ConfoundUtils.prototype.appointedCodeLineAscii = function () {
   traverse(this.ast, {
@@ -252,20 +256,20 @@ ConfoundUtils.prototype.appointedCodeLineAscii = function () {
         }
 
         if (!(v.trailingComments && v.trailingComments[0].value
-            === 'ASCIIEncrypt')) {
+          === 'ASCIIEncrypt')) {
           return v;
         }
 
         delete v.trailingComments;
-        let {code} = generator(v);
+        let { code } = generator(v);
         let codeAscii = [].map.call(code, function (v) {
           return t.numericLiteral(v.charCodeAt(0));
         })
         let decryptFuncName = t.memberExpression(t.identifier('String'),
-            t.identifier('fromCharCode'));
+          t.identifier('fromCharCode'));
         let decryptFunc = t.callExpression(decryptFuncName, codeAscii);
         return t.expressionStatement(
-            t.callExpression(t.identifier('eval'), [decryptFunc]));
+          t.callExpression(t.identifier('eval'), [decryptFunc]));
       });
       path.get('body').replaceWith(t.blockStatement(Statements));
     }
@@ -293,7 +297,7 @@ ConfoundUtils.prototype.commaConfusion = function () {
           declarations.map(function (v) {
             path.node.params.push(v.id);
             v.init && statements.push(
-                t.assignmentExpression('=', v.id, v.init));
+              t.assignmentExpression('=', v.id, v.init));
           });
           p.replaceInline(statements);
         }
@@ -303,11 +307,11 @@ ConfoundUtils.prototype.commaConfusion = function () {
       while (i < blockStatementLength) {
         let tempSta = blockStatement.body[i++];
         t.isExpressionStatement(tempSta) ? secondSta = tempSta.expression
-            : secondSta = tempSta;
+          : secondSta = tempSta;
         //处理返回语句
         if (t.isReturnStatement(secondSta)) {
           firstSta = t.returnStatement(
-              t.toSequenceExpression([firstSta, secondSta.argument]));
+            t.toSequenceExpression([firstSta, secondSta.argument]));
           //处理赋值语句
         } else if (t.isAssignmentExpression(secondSta)) {
           if (t.isCallExpression(secondSta.right)) {
@@ -316,7 +320,7 @@ ConfoundUtils.prototype.commaConfusion = function () {
             firstSta = secondSta;
           } else {
             secondSta.right = t.toSequenceExpression(
-                [firstSta, secondSta.right]);
+              [firstSta, secondSta.right]);
             firstSta = secondSta;
           }
         } else {
@@ -338,7 +342,7 @@ ConfoundUtils.prototype.flatFlow = function () {
       let blockStatement = path.node.body;
       //逐行提取语句，按原先的语句顺序建立索引，包装成对象
       let Statements = blockStatement.body.map(function (v, i) {
-        return {index: i, value: v};
+        return { index: i, value: v };
       });
       //洗牌，打乱语句顺序
       let i = Statements.length;
@@ -352,7 +356,7 @@ ConfoundUtils.prototype.flatFlow = function () {
       Statements.map(function (v, i) {
         dispenserArr[v.index] = i;
         let switchCase = t.switchCase(t.numericLiteral(i),
-            [v.value, t.continueStatement()]);
+          [v.value, t.continueStatement()]);
         cases.push(switchCase);
       });
       let dispenserStr = dispenserArr.join('|');
@@ -361,7 +365,7 @@ ConfoundUtils.prototype.flatFlow = function () {
       let index = path.scope.generateUidIdentifier('index');
       //生成 '...'.split 这是一个成员表达式
       let callee = t.memberExpression(t.stringLiteral(dispenserStr),
-          t.identifier('split'));
+        t.identifier('split'));
       //生成 split('|')
       let arrayInit = t.callExpression(callee, [t.stringLiteral('|')]);
       //_array和_index放入声明语句中，_index初始化为0
@@ -379,7 +383,7 @@ ConfoundUtils.prototype.flatFlow = function () {
       unaExp = t.unaryExpression("!", unaExp);
       //生成整个while循环
       let whileSta = t.whileStatement(unaExp,
-          t.blockStatement([switchSta, t.breakStatement()]));
+        t.blockStatement([switchSta, t.breakStatement()]));
       //用分发器和while循环来构建blockStatement，替换原有节点
       path.get('body').replaceWith(t.blockStatement([dispenser, whileSta]));
 
@@ -390,7 +394,7 @@ ConfoundUtils.prototype.flatFlow = function () {
 //构建数组声明语句，加入到ast最前面
 ConfoundUtils.prototype.unshiftArrayDeclaration = function () {
   this.bigArr = t.variableDeclarator(t.identifier('arr'),
-      t.arrayExpression(this.bigArr));
+    t.arrayExpression(this.bigArr));
   this.bigArr = t.variableDeclaration('var', [this.bigArr]);
   this.ast.program.body.unshift(this.bigArr);
 };
@@ -412,7 +416,7 @@ let ast = parse(jscode);
 
 //把还原数组乱序的代码解析成astFront
 let astFront = parse(
-    "(function(myArr,num){var reductionArr=function(nums){while(--nums){myArr.push(myArr.shift());}};reductionArr(++num);})(arr,0x10);");
+  "(function(myArr,num){var reductionArr=function(nums){while(--nums){myArr.push(myArr.shift());}};reductionArr(++num);})(arr,0x10);");
 
 //初始化类，传递自定义的加密函数进去
 let confoundAst = new ConfoundUtils(ast, base64Encode);
@@ -422,13 +426,10 @@ let confoundAstFront = new ConfoundUtils(astFront);
 confoundAst.changeAccessMode();
 
 //标准内置对象的处理
-confoundAst.changeBuiltinObjects();
+// confoundAst.changeBuiltinObjects();
 
 // 逗号表达式
 confoundAst.commaConfusion();
-
-//二项式转函数花指令
-confoundAst.binaryToFunc()
 
 //字符串加密与数组混淆
 confoundAst.arrayConfound();
@@ -447,29 +448,39 @@ confoundAst.astConcatUnshift(astFront.program.body[0]);
 //再生成数组声明语句，并加入到被混淆代码的最开始处
 confoundAst.unshiftArrayDeclaration();
 
+// 二项式转函数花指令
+confoundAst.binaryToFunc()
+
+
+// 平坦流
+confoundAst.flatFlow();
+
+
 //标识符重命名
 confoundAst.renameIdentifier();
 
 //指定代码行的混淆，需要放到标识符混淆之后
 confoundAst.appointedCodeLineEncrypt();
-confoundAst.appointedCodeLineAscii();
+
 
 //数值常量混淆
 confoundAst.numericEncrypt();
 
-// 平坦流
-confoundAst.flatFlow();
+// ASCII编码
+// confoundAst.appointedCodeLineAscii();
+
+// 获取最终的AST
 ast = confoundAst.getAst();
 
 //ast转为代码
-let {code} = generator(ast, {
-  minified: true,
+let { code } = generator(ast, {
+  minified: false,
   comments: false,
   retainLines: false,
-  compact: true,
+  compact: false,
   jsescOption: {}
 });
 
 //混淆的代码中，如果有十六进制字符串加密，ast转成代码以后会有多余的转义字符，需要替换掉
 code = code.replace(/\\\\x/g, '\\x');
-fs.writeFileSync("lib/" + "res" + '.min.js', code)
+fs.writeFileSync("lib/" + "res" + '.js', code)
