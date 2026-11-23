@@ -41,6 +41,15 @@ jobs:
           #          macos-10.15,
           #          macos-11,
         ]
+        exclude:
+          # macos-latest is now an arm64 (Apple Silicon) image and Node.js 14 was never
+          # published for darwin-arm64, so setup-node cannot install it there. The same
+          # combination is re-added below on an Intel (x64) macOS image.
+          - node-version: 14.x
+            os: macos-latest
+        include:
+          - node-version: 14.x
+            os: macos-26-intel
     steps:
       - uses: actions/checkout@v6
 
