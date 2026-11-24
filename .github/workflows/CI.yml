@@ -51,7 +51,7 @@ jobs:
           - node-version: 14.x
             os: macos-26-intel
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
